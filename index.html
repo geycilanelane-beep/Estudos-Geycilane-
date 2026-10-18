@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estudos da Geycilane</title>
+<style>
+:root{--a:#7c3aed;--a2:#ec4899;--bg:#f8f7fc;--card:#fff;--tx:#1f1d2b;--mut:#6b6880;--ok:#10b981;--err:#ef4444;--bd:#ece9f5}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{background:var(--bg);color:var(--tx);padding-bottom:40px}
+header{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;padding:22px 20px 60px}
+header h1{font-size:1.4rem}header p{opacity:.85;font-size:.9rem}
+nav{display:flex;gap:6px;overflow-x:auto;max-width:900px;margin:-40px auto 0;padding:0 16px}
+nav button{flex-shrink:0;border:none;background:rgba(255,255,255,.9);padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600;color:var(--mut)}
+nav button.on{background:#fff;color:var(--a);box-shadow:0 4px 14px rgba(124,58,237,.25)}
+main{max-width:900px;margin:16px auto;padding:0 16px}
+.tab{display:none}.tab.on{display:block}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:14px}
+h2{font-size:1.1rem;margin-bottom:10px}h3{font-size:1rem}
+input,select,textarea{border:1px solid var(--bd);border-radius:10px;padding:9px 11px;font-size:.95rem;width:100%;background:#fff}
+textarea{min-height:110px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}.row>*{flex:1;min-width:120px}
+.btn{background:var(--a);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-weight:600;cursor:pointer;flex:0 0 auto}
+.btn.sec{background:#f1ecfe;color:var(--a)}.btn.del{background:none;color:var(--err);padding:4px 8px}
+.bar{height:9px;background:#efeaf9;border-radius:9px;overflow:hidden;margin:8px 0}
+.bar div{height:100%;background:linear-gradient(90deg,var(--a),var(--a2));transition:.3s}
+.topic{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed var(--bd)}
+.topic input{width:auto}.topic span.done{text-decoration:line-through;color:var(--mut)}
+.mut{color:var(--mut);font-size:.85rem}.flex{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;padding:10px;border:1px solid var(--bd);border-radius:10px;background:#fff;cursor:pointer}
+.opt.right{border-color:var(--ok);background:#ecfdf5}.opt.wrong{border-color:var(--err);background:#fef2f2}
+.big{font-size:2rem;font-weight:800;color:var(--a)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal div{padding:8px 2px;border-radius:8px;font-size:.85rem;min-height:38px}
+.cal .h{font-weight:700;color:var(--mut)}.cal .d{background:#faf9fd}
+.cal .today{outline:2px solid var(--a)}.cal .ex{background:linear-gradient(120deg,var(--a),var(--a2));color:#fff;font-weight:700}
+.pill{display:inline-block;background:#f1ecfe;color:var(--a);border-radius:20px;padding:2px 10px;font-size:.8rem;font-weight:600}
+</style>
+</head>
+<body>
+<header><h1>📚 Estudos da Geycilane</h1><p>Organização, prática e foco no semestre</p></header>
+<nav id="nav"></nav>
+<main>
+<section class="tab" id="t0">
+  <div class="card"><h2>Progresso geral</h2><div class="bar"><div id="gBar"></div></div><p class="mut" id="gTxt"></p></div>
+  <div class="card"><div class="row"><input id="newSub" placeholder="Nova disciplina"><button class="btn" onclick="addSub()">Adicionar</button></div>
+  <div class="row"><button class="btn sec" onclick="exportar()">Exportar backup</button><label class="btn sec" style="text-align:center">Importar backup<input type="file" hidden onchange="importar(event)"></label></div></div>
+  <div id="subs"></div>
+</section>
+
+<section class="tab" id="t1">
+  <div class="card"><h2>1. Gerar questões com IA</h2>
+    <div class="row"><select id="qSub"></select><input id="qN" type="number" value="5" min="1" max="20" style="max-width:90px"></div>
+    <textarea id="qCont" placeholder="Cole aqui o conteúdo da aula..."></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn" onclick="gerarPrompt()">Copiar pedido para a IA</button></div>
+    <p class="mut">Cole o pedido no chat do Claude e traga a resposta de volta abaixo.</p></div>
+  <div class="card"><h2>2. Colar questões geradas</h2>
+    <textarea id="qJson" placeholder="Cole aqui a resposta da IA (o bloco que começa com [ )"></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn" onclick="importQ()">Salvar no banco</button></div></div>
+  <div class="card"><div class="flex"><h2>Praticar</h2><select id="pSub" style="max-width:200px" onchange="novaQ()"></select></div><div id="pratica"></div></div>
+  <div class="card"><h2>Desempenho por tema</h2><div id="stats"></div></div>
+</section>
+
+<section class="tab" id="t2">
+  <div class="card"><h2>Calculadora de média</h2>
+    <div class="row"><select id="mSub"></select></div>
+    <label class="mut">Notas que já tirei (separe por vírgula)</label><input id="mNotas" placeholder="ex: 6.5, 8">
+    <div class="row" style="margin-top:8px"><div><label class="mut">Total de provas</label><input id="mTot" type="number" value="3"></div>
+    <div><label class="mut">Média para passar</label><input id="mMed" type="number" step="0.1" value="7"></div></div>
+    <button class="btn" onclick="calc()">Calcular</button>
+    <div id="mRes" style="margin-top:14px"></div></div>
+</section>
+
+<section class="tab" id="t3">
+  <div class="card"><h2>Nova prova</h2><div class="row"><select id="pvSub"></select><input id="pvData" type="date"><input id="pvObs" placeholder="Obs (opcional)"><button class="btn" onclick="addProva()">Adicionar</button></div></div>
+  <div class="card"><div class="flex"><button class="btn sec" onclick="mes(-1)">‹</button><h3 id="calT"></h3><button class="btn sec" onclick="mes(1)">›</button></div><div class="cal" id="cal" style="margin-top:10px"></div></div>
+  <div id="provas"></div>
+</section>
+
+<section class="tab" id="t4">
+  <div class="card" style="text-align:center"><p class="mut">Total de horas complementares</p><div class="big" id="hTot">0h</div></div>
+  <div class="card"><h2>Novo evento</h2><div class="row"><input id="evN" placeholder="Nome do evento"><input id="evD" type="date"><input id="evH" type="number" step="0.5" placeholder="Horas" style="max-width:100px"><button class="btn" onclick="addEv()">Adicionar</button></div></div>
+  <div id="eventos"></div>
+</section>
+</main>
+
+<script>
+const KEY='estudosGeycilane';
+const padrao=['Ped','GO','PESQUISA','SEMIO 2','ISEC','TCA','Terapêutica','Saúde mental'];
+let D=JSON.parse(localStorage.getItem(KEY)||'null')||{subs:padrao.map(n=>({n,t:[]})),qs:[],res:{},provas:[],ev:[]};
+const save=()=>localStorage.setItem(KEY,JSON.stringify(D));
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const tabs=['Disciplinas','Questões','Média','Provas','Eventos'];
+$('nav').innerHTML=tabs.map((t,i)=>`<button onclick="aba(${i})">${t}</button>`).join('');
+function aba(i){document.querySelectorAll('.tab').forEach((e,j)=>e.classList.toggle('on',i==j));document.querySelectorAll('nav button').forEach((e,j)=>e.classList.toggle('on',i==j));render()}
+
+function render(){
+  const opts=D.subs.map(s=>`<option>${esc(s.n)}</option>`).join('');
+  ['qSub','mSub','pvSub'].forEach(id=>{const v=$(id).value;$(id).innerHTML=opts;if(v)$(id).value=v});
+  const pv=$('pSub').value;$('pSub').innerHTML='<option value="">Todos os temas</option>'+opts;$('pSub').value=pv;
+  rSubs();rStats();rCal();rProvas();rEv();
+}
+
+/* Disciplinas */
+function rSubs(){
+  let tot=0,ok=0;
+  $('subs').innerHTML=D.subs.map((s,i)=>{
+    const d=s.t.filter(t=>t.ok).length;tot+=s.t.length;ok+=d;const p=s.t.length?Math.round(d/s.t.length*100):0;
+    return `<div class="card"><div class="flex"><h3>${esc(s.n)}</h3><div><span class="pill">${p}%</span><button class="btn del" onclick="delSub(${i})">✕</button></div></div>
+    <div class="bar"><div style="width:${p}%"></div></div>
+    ${s.t.map((t,j)=>`<div class="topic"><input type="checkbox" ${t.ok?'checked':''} onchange="tog(${i},${j})"><span class="${t.ok?'done':''}" style="flex:1">${esc(t.n)}</span><button class="btn del" onclick="delT(${i},${j})">✕</button></div>`).join('')}
+    <div class="row" style="margin-top:8px"><input id="tp${i}" placeholder="Novo tópico" onkeydown="if(event.key=='Enter')addT(${i})"><button class="btn sec" onclick="addT(${i})">+ Tópico</button></div></div>`}).join('');
+  const g=tot?Math.round(ok/tot*100):0;$('gBar').style.width=g+'%';$('gTxt').textContent=`${ok} de ${tot} tópicos estudados (${g}%)`;
+}
+function addSub(){const n=$('newSub').value.trim();if(!n)return;D.subs.push({n,t:[]});$('newSub').value='';save();render()}
+function delSub(i){if(confirm('Excluir '+D.subs[i].n+'?')){D.subs.splice(i,1);save();render()}}
+function addT(i){const n=$('tp'+i).value.trim();if(!n)return;D.subs[i].t.push({n,ok:false});save();render();$('tp'+i).focus()}
+function tog(i,j){D.subs[i].t[j].ok=!D.subs[i].t[j].ok;save();render()}
+function delT(i,j){D.subs[i].t.splice(j,1);save();render()}
+function exportar(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(D)],{type:'application/json'}));a.download='backup-estudos.json';a.click()}
+function importar(e){const r=new FileReader();r.onload=()=>{try{D=JSON.parse(r.result);save();render();alert('Backup restaurado!')}catch{alert('Arquivo inválido')}};r.readAsText(e.target.files[0])}
+
+/* Questões */
+function gerarPrompt(){
+  const c=$('qCont').value.trim();if(!c)return alert('Cole o conteúdo da aula primeiro.');
+  const p=`Crie ${$('qN').value} questões de múltipla escolha (5 alternativas, A a E) sobre o conteúdo abaixo, da disciplina "${$('qSub').value}". Responda APENAS com um array JSON neste formato, sem texto extra:
+[{"p":"enunciado","o":["A","B","C","D","E"],"c":0,"e":"gabarito comentado explicando a correta e por que as outras estão erradas"}]
+("c" é o índice da alternativa correta, começando em 0.)
+
+CONTEÚDO:
+${c}`;
+  navigator.clipboard.writeText(p).then(()=>alert('Pedido copiado! Cole no chat do Claude.'),()=>{$('qJson').value=p;alert('Não consegui copiar automaticamente; o pedido foi colocado na caixa abaixo para você copiar.')});
+}
+function importQ(){
+  try{let t=$('qJson').value;t=t.slice(t.indexOf('['),t.lastIndexOf(']')+1);const arr=JSON.parse(t);const s=$('qSub').value;
+    arr.forEach(q=>D.qs.push({...q,s}));save();$('qJson').value='';alert(arr.length+' questões salvas em '+s+'!');render();novaQ()}
+  catch{alert('Não reconheci o formato. Cole só o bloco JSON que a IA gerou.')}
+}
+let atual=null;
+function novaQ(){
+  const f=$('pSub').value;const l=D.qs.filter(q=>!f||q.s==f);
+  if(!l.length){$('pratica').innerHTML='<p class="mut">Nenhuma questão ainda. Gere algumas acima!</p>';return}
+  atual=l[Math.floor(Math.random()*l.length)];
+  $('pratica').innerHTML=`<span class="pill">${esc(atual.s)}</span><p style="margin:10px 0;font-weight:600">${esc(atual.p)}</p>`+
+    atual.o.map((o,i)=>`<button class="opt" onclick="resp(${i},this)">${'ABCDE'[i]}) ${esc(o)}</button>`).join('')+'<div id="fb"></div>';
+}
+function resp(i,el){
+  if($('fb').innerHTML)return;const ok=i==atual.c;const opts=document.querySelectorAll('#pratica .opt');
+  opts[atual.c].classList.add('right');if(!ok)el.classList.add('wrong');
+  const r=D.res[atual.s]||(D.res[atual.s]={a:0,t:0});r.t++;if(ok)r.a++;save();rStats();
+  $('fb').innerHTML=`<div class="card" style="margin-top:10px;background:${ok?'#ecfdf5':'#fef2f2'}"><b>${ok?'✅ Acertou!':'❌ Errou'}</b><p style="margin-top:6px">${esc(atual.e||'')}</p></div><button class="btn" onclick="novaQ()">Próxima questão</button>`;
+}
+function rStats(){
+  const k=Object.keys(D.res);
+  $('stats').innerHTML=k.length?k.map(s=>{const r=D.res[s],p=Math.round(r.a/r.t*100);
+    return `<div style="margin-bottom:10px"><div class="flex"><b>${esc(s)}</b><span class="mut">${r.a}/${r.t} · ${p}%</span></div><div class="bar"><div style="width:${p}%;background:${p>=70?'var(--ok)':p>=50?'#f59e0b':'var(--err)'}"></div></div></div>`}).join('')
+    +`<p class="mut">${D.qs.length} questões no banco</p>`:'<p class="mut">Responda questões para ver seu desempenho.</p>';
+}
+
+/* Média */
+function calc(){
+  const n=$('mNotas').value.split(/[,;]/).map(x=>parseFloat(x.replace(',','.'))).filter(x=>!isNaN(x));
+  const tot=+$('mTot').value,med=+$('mMed').value,falta=tot-n.length,soma=n.reduce((a,b)=>a+b,0);
+  if(falta<=0){const m=soma/n.length;$('mRes').innerHTML=`<div class="big">${m.toFixed(2)}</div><p>${m>=med?'🎉 Aprovada!':'Média abaixo de '+med}</p>`;return}
+  const prec=(med*tot-soma)/falta;
+  $('mRes').innerHTML=`<p class="mut">${$('mSub').value} · média atual ${n.length?(soma/n.length).toFixed(2):'-'}</p><div class="big">${prec<=0?'0':prec.toFixed(2)}</div>
+  <p>${prec<=0?'🎉 Você já garantiu a média!':prec>10?'😬 Acima de 10 — converse com o professor sobre recuperação.':`É o que você precisa tirar em ${falta>1?'cada uma das '+falta+' provas restantes':'a próxima prova'}.`}</p>`;
+}
+
+/* Provas */
+let cm=new Date();cm.setDate(1);
+const hoje=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const dias=s=>Math.round((new Date(s+'T00:00')-hoje())/864e5);
+function addProva(){const d=$('pvData').value;if(!d)return alert('Escolha a data.');D.provas.push({s:$('pvSub').value,d,o:$('pvObs').value});$('pvObs').value='';save();render()}
+function delProva(i){D.provas.splice(i,1);save();render()}
+function mes(x){cm.setMonth(cm.getMonth()+x);rCal()}
+function rCal(){
+  const y=cm.getFullYear(),m=cm.getMonth();$('calT').textContent=cm.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  let h=['D','S','T','Q','Q','S','S'].map(x=>`<div class="h">${x}</div>`).join('');
+  for(let i=0;i<new Date(y,m,1).getDay();i++)h+='<div></div>';
+  const t=hoje();
+  for(let d=1;d<=new Date(y,m+1,0).getDate();d++){
+    const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const ps=D.provas.filter(p=>p.d==iso);
+    const isT=t.getFullYear()==y&&t.getMonth()==m&&t.getDate()==d;
+    h+=`<div class="d ${ps.length?'ex':''} ${isT?'today':''}" title="${esc(ps.map(p=>p.s).join(', '))}">${d}${ps.length?'<br><small>'+esc(ps[0].s)+'</small>':''}</div>`;
+  }
+  $('cal').innerHTML=h;
+}
+function rProvas(){
+  const l=D.provas.map((p,i)=>({...p,i})).sort((a,b)=>a.d.localeCompare(b.d));
+  $('provas').innerHTML=l.map(p=>{const n=dias(p.d);
+    return `<div class="card flex" style="${n<0?'opacity:.5':''}"><div><b>${esc(p.s)}</b><p class="mut">${new Date(p.d+'T00:00').toLocaleDateString('pt-BR')} ${esc(p.o||'')}</p></div>
+    <div style="text-align:right"><div class="big" style="font-size:1.5rem">${n<0?'✓':n==0?'HOJE':n}</div><span class="mut">${n>0?(n==1?'dia':'dias'):n<0?'passou':''}</span><br><button class="btn del" onclick="delProva(${p.i})">✕</button></div></div>`}).join('')||'<p class="mut">Nenhuma prova cadastrada.</p>';
+}
+
+/* Eventos */
+function addEv(){const n=$('evN').value.trim(),h=parseFloat($('evH').value);if(!n||isNaN(h))return alert('Preencha nome e horas.');D.ev.push({n,d:$('evD').value,h});$('evN').value=$('evH').value='';save();render()}
+function delEv(i){D.ev.splice(i,1);save();render()}
+function rEv(){
+  $('hTot').textContent=D.ev.reduce((a,e)=>a+e.h,0)+'h';
+  $('eventos').innerHTML=D.ev.map((e,i)=>`<div class="card flex"><div><b>${esc(e.n)}</b><p class="mut">${e.d?new Date(e.d+'T00:00').toLocaleDateString('pt-BR'):''}</p></div><div><span class="pill">${e.h}h</span><button class="btn del" onclick="delEv(${i})">✕</button></div></div>`).join('')||'<p class="mut">Nenhum evento ainda.</p>';
+}
+
+aba(0);novaQ();
+</script>
+</body>
+</html>
